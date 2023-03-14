@@ -454,13 +454,15 @@ app.post('/', async (req, res) => {
         await saveImg();
         anim([...names, names[0]], 60, 6, 6, 2);
 
-        res.set('Content-Disposition', `attachment; filename="${subStr}.gif"`);
-        res.setHeader('Content-type', 'image/gif');
-        const fileStream = fs.createReadStream(`${subStr}.gif`);
-        fileStream.pipe(res);
-        fileStream.on('end', () => {
-            console.log('File sent');
-            res.end();
+        res.sendFile(`${subStr}.gif`, {
+            root: __dirname
+        }, (err) => {
+            if (err) {
+                console.error('Error sending file: ' + err.message);
+                res.sendStatus(500);
+            } else {
+                console.log('File sent');
+            }
         });
     } catch (ex) {
         console.log(ex.stack);
