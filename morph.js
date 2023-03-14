@@ -452,20 +452,20 @@ app.post('/', async (req, res) => {
     try {
 
         await saveImg();
-        anim([...names, names[0]], 60, 6, 6, 2);
-
-        const filePath = `${subStr}.gif`;
-        const fileName = `${subStr}.gif`;
-        res.setHeader('Content-Type', 'image/gif');
-        res.sendFile(filePath, {
-            root: __dirname
-        }, (err) => {
-            if (err) {
-                console.error('Error sending file: ' + err.message);
-                res.status(err.status).end();
-            } else {
-                console.log(`File ${fileName} sent`);
-            }
+        anim([...names, names[0]], 60, 6, 6, 2, () => {
+            const filePath = `${subStr}.gif`;
+            const fileName = `${subStr}.gif`;
+            res.setHeader('Content-Type', 'image/gif');
+            res.sendFile(filePath, {
+                root: __dirname
+            }, (err) => {
+                if (err) {
+                    console.error('Error sending file: ' + err.message);
+                    res.status(err.status).end();
+                } else {
+                    console.log(`File ${fileName} sent`);
+                }
+            });
         });
     } catch (ex) {
         console.log(ex.stack);
