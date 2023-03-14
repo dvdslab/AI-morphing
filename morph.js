@@ -35,7 +35,7 @@ app.set('view engine', 'ejs');
 //     .catch((err) => console.log(err));
 
 app.listen(4000 || process.env.PORT, () => {
-    console.log('Server listening on port 4000');
+    console.log('Server listening...');
 });
 
 
