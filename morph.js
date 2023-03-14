@@ -28,13 +28,14 @@ app.set('view engine', 'ejs');
 //         useNewUrlParser: true,
 //         useUnifiedTopology: true,
 //     })
-//     .then((result) => {
+//     .then((result) =>
 //         app.listen(4000)
 //         console.log('connected');
 //     })
 //     .catch((err) => console.log(err));
 
-app.listen(4000 || process.env.PORT, () => {
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => {
     console.log('Server listening...');
 });
 
