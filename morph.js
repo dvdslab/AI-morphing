@@ -454,12 +454,11 @@ app.post('/', async (req, res) => {
         await saveImg();
         anim([...names, names[0]], 60, 6, 6, 2);
 
-        res.sendFile(`${subStr}.gif`, {
-            root: __dirname
-        }, (err) => {
+        res.setHeader('Content-Type', 'image/gif');
+        res.download(`${subStr}.gif`, `${subStr}.gif`, (err) => {
             if (err) {
                 console.error('Error sending file: ' + err.message);
-                res.sendStatus(500);
+                res.status(err.status).end();
             } else {
                 console.log('File sent');
             }
