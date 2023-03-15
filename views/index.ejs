@@ -32,19 +32,19 @@
             Please enter your <a
                 href="https://www.youtube.com/watch?v=DFmmiYlbgX0&list=PLx3k0RGeXZ_zs3az0Z2BnpTIPH2lxQfFX&index=4"
                 target="_blank">OpenAI API Key</a>: <input id="api-key"
-                value="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">
+                value="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">
         </div>
     </fieldset>
 
     <fieldset>
         <legend>Request parameters</legend>
         <div>
-            <textarea id="text-prompt" rows="4" cols="52">nice painting of a face in the 1300s, tilt shift, bokeh, voxel, vray render, high
-                detail</textarea>
+            <textarea id="text-prompt" rows="4"
+                cols="52">nice painting of a face in the 1300s, tilt shift, bokeh, voxel, Vray render, high detail</textarea>
         </div>
 
         <div>
-            Image count (1-4): <input id="image-count" value="2">
+            Image count (2-3): <input id="image-count" value="2">
         </div>
 
         <div>
@@ -77,6 +77,21 @@
     </fieldset>
     <fieldset>
         <button id="btn" type="submit">Morph</button>
+    </fieldset>
+
+    <fieldset>
+        <legend>Request Status</legend>
+        <div>
+            <p id="status"></p>
+        </div>
+    </fieldset>
+
+    <fieldset>
+        <legend>GIF</legend>
+
+        <!-- Response images will be added here -->
+        <div id="gif-container"></div>
+
     </fieldset>
 
     <script>
@@ -134,7 +149,7 @@
             fetch(dalleEndpoint, reqParams)
                 .then(res => res.json())
                 .then(json => {
-                    addGif()
+                    // addGif()
                     addImages(json, prompt);
                 })
                 .catch(error => {
@@ -178,21 +193,26 @@
                 container.prepend(img);
             }
 
+            //disable the morph button if less than 2 or more than 3 images are selected
+            if (links < 2 || links > 3) {
+                document.getElementById('btn').disabled = true;
+            } else {
+                document.getElementById('btn').disabled = false;
+            }
+
             reqStatus.innerHTML = jsonData.data.length + ' images received for "' + prompt + '"';
         }
 
-        function addGif() {
-            console.log(links)
-            return links
-        }
-
         const btn = document.getElementById('btn');
+        const status = document.getElementById('status')
 
         // Handle the form's submit event (when the button Submit gets clicked)
         btn.addEventListener("click", e => {
             // Prevent the default HTML form submission behavior:
             e.preventDefault();
             btn.innerHTML = "Morphing..."
+            btn.disabled = true
+            status.innerHTML = "might take a while..."
             links = links.concat(document.getElementById('api-key').value)
             // Send the Array as a stringified JSON to the server via an Ajax request using the Fetch API:
             fetch("/", {
@@ -204,9 +224,38 @@
                     body: JSON.stringify(links)
                 })
                 .then(res => res.json()) // <= Handle JSON response from server 
-                .then(data => console.log(data))
-                .catch(error => console.log(error));
+                .then(json => {
+                    displayImage(json)
+                    console.log(json);
+                })
+                .catch(error => {
+                    status.innerHTML = error;
+                    btn.disabled = false;
+                });
         })
+
+        function displayImage(jsonData) {
+            // btn.disabled = false;
+            btn.innerHTML = "Morphed";
+            status.innerHTML = "Morphed";
+
+            if (jsonData.error) {
+                status.innerHTML = 'ERROR: ' + jsonData.error;
+                return;
+            }
+
+            const gifContainer = document.getElementById('gif-container');
+            let gif = document.createElement('img');
+            gif.src = jsonData.url;
+            gif.alt = "test";
+            gif.style.maxWidth = "100%"; // Set max width to fit the allocated space
+
+            gifContainer.innerHTML = ''; // Remove any previously displayed images
+            gif.setAttribute('loop', ''); // add the loop attribute to the img element
+            gifContainer.appendChild(gif); // Add the new image
+
+            // Status.innerHTML = jsonData.data.length + ' images received for "' + prompt + '"';
+        }
     </script>
 </body>
 

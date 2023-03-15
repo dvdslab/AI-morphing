@@ -11,6 +11,10 @@ const {
 } = require('canvas');
 const pathe = require('path');
 const https = require('https');
+const http = require('http');
+const upload = require('./models/uploads');
+const cloudinary = require('./utils/cloudinary');
+const storage = require('./utils/multer');
 
 // middleware
 app.use(express.static('public'));
@@ -23,21 +27,20 @@ app.use(express.urlencoded({
 app.set('view engine', 'ejs');
 
 // database connection
-// const dbURI = process.env.dbURI;
-// mongoose.connect(dbURI, {
-//         useNewUrlParser: true,
-//         useUnifiedTopology: true,
-//     })
-//     .then((result) =>
-//         app.listen(4000)
-//         console.log('connected');
-//     })
-//     .catch((err) => console.log(err));
+const dbURI = process.env.dbURI;
+mongoose.connect(dbURI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    })
+    .then((result) => {
+        app.listen(4000)
+        console.log('connected');
+    })
+    .catch((err) => console.log(err));
 
-const PORT = process.env.PORT || 4000;
-app.listen(PORT, () => {
-    console.log('Server listening...');
-});
+// app.listen(4000 || process.env.PORT, () => {
+//     console.log('Server listening...');
+// });
 
 
 // routes
@@ -55,7 +58,7 @@ app.get('/', (req, res) => {
     res.render('index');
 });
 
-app.post('/', async (req, res) => {
+app.post('/', storage.single('file'), async (req, res) => {
     console.log(req.body);
     const last = req.body[req.body.length - 1];
     if (last.includes('sk-')) {
@@ -130,16 +133,94 @@ app.post('/', async (req, res) => {
         });
     }
 
+    // function gif(callback) {
+    //     const width = 400;
+    //     const height = 400;
+    //     const fps = 30;
+    //     const quality = 10;
+    //     const duration = noOfLinks * 5; // duration of the GIF in seconds
+    //     const frames = duration * fps;
+
+    //     const canvas = createCanvas(width, height);
+    //     const ctx = canvas.getContext('2d');
+
+    //     const encoder = new GIFEncoder(width, height);
+    //     encoder.setFrameRate(fps);
+    //     encoder.setQuality(quality);
+
+    //     const stream = fs.createWriteStream(`${subStr}.gif`);
+
+    //     encoder.createReadStream().pipe(stream);
+    //     encoder.start();
+
+    //     logFrames(imagePaths => {
+    //         Promise.all(imagePaths.map(path => loadImage(path)))
+    //             .then(images => {
+    //                 for (let i = 0; i < frames; i++) {
+    //                     // Choose the image to use for this frame
+    //                     const image = images[i % images.length];
+
+    //                     // console.log('image', image);
+
+    //                     // Draw the image on the canvas
+    //                     if (typeof image === 'object') {
+    //                         ctx.drawImage(image, 0, 0, width, height);
+    //                     } else {
+    //                         console.log('image is not an object');
+    //                     }
+
+
+    //                     encoder.addFrame(ctx);
+    //                 }
+
+    //                 encoder.finish()
+
+
+
+    //                 console.log('GIF created successfully');
+    //                 callback(); // call the callback function to delete the PNG files
+
+    //                 console.log('start');
+    //                 // Upload the generated GIF to Cloudinary
+    //                 cloudinary.uploader.upload(`./${subStr}.gif`,
+    //                     (err, result) => {
+    //                         if (err) {
+    //                             console.log(err);
+    //                             return res.status(500).send(err);
+    //                         }
+    //                         var Upload = new upload({
+    //                             name: subStr,
+    //                             url: result.url,
+    //                             cloudinary_id: result.public_id,
+    //                             // description: req.body.description,
+    //                         });
+    //                         Upload.save((err, result) => {
+    //                             if (err) {
+    //                                 console.log(err);
+    //                                 return res.status(500).send(err);
+    //                             }
+    //                             console.log(result);
+    //                             return res.status(200).send(result);
+    //                         });
+    //                     }
+    //                 );
+
+    //                 console.log('end');
+    //             });
+    //     });
+    // }
+    var resUrl
+
     function gif(callback) {
-        const width = 400;
-        const height = 400;
-        const fps = 30;
-        const quality = 10;
-        const duration = noOfLinks * 5; // duration of the GIF in seconds
+        const width = 200;
+        const height = 200;
+        const fps = 20;
+        const quality = 1;
+        const duration = noOfLinks * 4; // duration of the GIF in seconds
         const frames = duration * fps;
 
         const canvas = createCanvas(width, height);
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext("2d");
 
         const encoder = new GIFEncoder(width, height);
         encoder.setFrameRate(fps);
@@ -150,29 +231,71 @@ app.post('/', async (req, res) => {
         encoder.createReadStream().pipe(stream);
         encoder.start();
 
-        logFrames(imagePaths => {
-            Promise.all(imagePaths.map(path => loadImage(path)))
-                .then(images => {
+        logFrames((imagePaths) => {
+            Promise.all(imagePaths.map((path) => loadImage(path)))
+                .then((images) => {
                     for (let i = 0; i < frames; i++) {
                         // Choose the image to use for this frame
                         const image = images[i % images.length];
 
-                        // console.log('image', image);
-
                         // Draw the image on the canvas
-                        if (typeof image === 'object') {
+                        if (typeof image === "object") {
                             ctx.drawImage(image, 0, 0, width, height);
                         } else {
-                            console.log('image is not an object');
+                            console.log("image is not an object");
                         }
-
 
                         encoder.addFrame(ctx);
                     }
 
                     encoder.finish();
-                    console.log('GIF created successfully');
-                    callback(); // call the callback function to delete the PNG files
+
+                    console.log("GIF created successfully");
+
+                    // Upload the generated GIF to Cloudinary
+                    cloudinary.uploader.upload(
+                        `${subStr}.gif`,
+                        (err, result) => {
+                            if (err) {
+                                console.log(err);
+                                callback(err);
+                            } else {
+                                console.log(result);
+
+                                // Save the upload details to MongoDB
+                                const Upload = new upload({
+                                    name: subStr,
+                                    url: result.url,
+                                    cloudinary_id: result.public_id,
+                                });
+
+                                Upload.save()
+                                    .then((result) => {
+                                        console.log(result);
+                                        resUrl = result.url;
+                                        res.status(200).json({
+                                            message: 'success',
+                                            url: resUrl
+                                        })
+                                        console.log(resUrl);
+                                        callback();
+                                    })
+                                    .catch((err) => {
+                                        console.log(err);
+                                        res.status(200).json({
+                                            message: err.message,
+                                            error: err
+                                        })
+                                        callback(err);
+                                    });
+
+                            }
+                        }
+                    );
+                })
+                .catch((err) => {
+                    console.log(err);
+                    callback(err);
                 });
         });
     }
@@ -452,30 +575,10 @@ app.post('/', async (req, res) => {
     try {
 
         await saveImg();
-        anim([...names, names[0]], 60, 6, 6, 2, () => {
-            const filePath = `${subStr}.gif`;
-            const fileName = `${subStr}.gif`;
-            res.setHeader('Content-Type', 'image/gif');
-            res.sendFile(filePath, {
-                root: __dirname
-            }, (err) => {
-                if (err) {
-                    console.error('Error sending file: ' + err.message);
-                    res.status(err.status).end();
-                } else {
-                    console.log(`File ${fileName} sent`);
-                }
-            });
-        });
+        anim([...names, names[0]], 35, 6, 6, 2)
+
     } catch (ex) {
         console.log(ex.stack);
+        console.log(ex)
     }
-
-
-
-
-    res.status(200).json({
-        received: req.body
-
-    })
 });
