@@ -33,7 +33,7 @@ mongoose.connect(dbURI, {
         useUnifiedTopology: true,
     })
     .then((result) => {
-        app.listen(4000)
+        app.listen(4001 || process.env.PORT)
         console.log('connected');
     })
     .catch((err) => console.log(err));
