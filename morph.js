@@ -27,20 +27,21 @@ app.use(express.urlencoded({
 app.set('view engine', 'ejs');
 
 // database connection
-const dbURI = process.env.dbURI;
-mongoose.connect(dbURI, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-    })
-    .then((result) => {
-        app.listen(4001 || process.env.PORT)
-        console.log('connected');
-    })
-    .catch((err) => console.log(err));
 
-// app.listen(4000 || process.env.PORT, () => {
-//     console.log('Server listening...');
-// });
+// const dbURI = process.env.dbURI;
+// mongoose.connect(dbURI, {
+//         useNewUrlParser: true,
+//         useUnifiedTopology: true,
+//     })
+//     .then((result) => {
+//         app.listen(4001 || process.env.PORT)
+//         console.log('connected');
+//     })
+//     .catch((err) => console.log(err));
+
+app.listen(process.env.PORT, () => {
+    console.log('Server listening...');
+});
 
 
 // routes
