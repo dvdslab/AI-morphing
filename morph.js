@@ -28,20 +28,21 @@ app.set('view engine', 'ejs');
 
 // database connection
 
-// const dbURI = process.env.dbURI;
-// mongoose.connect(dbURI, {
-//         useNewUrlParser: true,
-//         useUnifiedTopology: true,
-//     })
-//     .then((result) => {
-//         app.listen(4001 || process.env.PORT)
-//         console.log('connected');
-//     })
-//     .catch((err) => console.log(err));
+const dbURI = process.env.dbURI;
+mongoose.connect(dbURI, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+    })
+    .then((result) => {
+        app.listen(process.env.PORT, () => {
+            console.log('Server listening...');
+        });
+    })
+    .catch((err) => console.log(err));
 
-app.listen(process.env.PORT, () => {
-    console.log('Server listening...');
-});
+// app.listen(process.env.PORT, () => {
+//     console.log('Server listening...');
+// });
 
 
 // routes
